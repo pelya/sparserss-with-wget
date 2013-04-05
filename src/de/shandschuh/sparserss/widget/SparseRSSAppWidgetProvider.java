@@ -66,7 +66,7 @@ public class SparseRSSAppWidgetProvider extends AppWidgetProvider {
 		}
 	}
 	
-	static void updateAppWidget(Context context, int appWidgetId, boolean hideRead, String entryCount, String feedIds, int backgroundColor) {
+	void updateAppWidget(Context context, int appWidgetId, boolean hideRead, String entryCount, String feedIds, int backgroundColor) {
 		updateAppWidget(context, AppWidgetManager.getInstance(context), appWidgetId, hideRead, entryCount, feedIds, backgroundColor);
 	}
 	

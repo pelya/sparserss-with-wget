@@ -26,6 +26,7 @@
 package de.shandschuh.sparserss.widget;
 
 import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProviderInfo;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -126,7 +127,10 @@ public class WidgetConfigActivity extends PreferenceActivity {
 					preferences.putInt(widgetId+".background", color);
 					preferences.commit();
 					
-					SparseRSSAppWidgetProvider.updateAppWidget(WidgetConfigActivity.this, widgetId, hideRead, entryCount, feedIds, color);
+					SparseRSSAppWidgetProvider provider = new SparseRSSAppWidgetProvider();
+					if ( AppWidgetManager.getInstance(WidgetConfigActivity.this).getAppWidgetInfo(widgetId).initialLayout == R.layout.homescreenwidget_small )
+						provider = new SparseRSSAppWidgetProviderSmall();
+					provider.updateAppWidget(WidgetConfigActivity.this, widgetId, hideRead, entryCount, feedIds, color);
 					setResult(RESULT_OK, new Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId));
 					finish();
 				}
