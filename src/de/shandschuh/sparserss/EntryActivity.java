@@ -310,7 +310,6 @@ public class EntryActivity extends Activity {
 		OnTouchListener onTouchListener = new OnTouchListener() {
 			public boolean onTouch(View v, MotionEvent event) {
 				if (event.getAction() == MotionEvent.ACTION_DOWN) {
-					//System.out.println("getContentHeight() " + webView.getContentHeight()*webView.getScale() + " webView.getHeight() " +webView.getHeight() );
 					if ( webView.getContentHeight()*webView.getScale() - 0.5f > webView.getHeight() ) {
 						((TextView)findViewById(R.id.title)).setMaxLines(1);
 					}
@@ -438,7 +437,7 @@ public class EntryActivity extends Activity {
 				String author = entryCursor.getString(authorPosition);
 				
 				if (author != null && author.length() > 0) {
-					dateStringBuilder.append(BRACKET).append(author).append(')');
+					dateStringBuilder.append(BRACKET).append(author.replace("\n", "").trim()).append(')');
 				}
 				
 				((TextView) findViewById(R.id.entry_date)).setText(dateStringBuilder);
