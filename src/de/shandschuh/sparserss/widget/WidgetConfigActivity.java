@@ -63,6 +63,8 @@ public class WidgetConfigActivity extends PreferenceActivity {
 		addPreferencesFromResource(R.layout.widgetpreferences);
 		setContentView(R.layout.widgetconfig);
 		
+		final boolean isSmallWidget = AppWidgetManager.getInstance(WidgetConfigActivity.this).getAppWidgetInfo(widgetId).initialLayout == R.layout.homescreenwidget_small;
+		
 		final ListPreference entryCountPreference = (ListPreference) findPreference("widget.entrycount");
 		
 		final PreferenceCategory feedsPreferenceCategory = (PreferenceCategory) findPreference("widget.visiblefeeds");
@@ -127,10 +129,11 @@ public class WidgetConfigActivity extends PreferenceActivity {
 					preferences.putInt(widgetId+".background", color);
 					preferences.commit();
 					
-					SparseRSSAppWidgetProvider provider = new SparseRSSAppWidgetProvider();
-					if ( AppWidgetManager.getInstance(WidgetConfigActivity.this).getAppWidgetInfo(widgetId).initialLayout == R.layout.homescreenwidget_small )
-						provider = new SparseRSSAppWidgetProviderSmall();
-					provider.updateAppWidget(WidgetConfigActivity.this, widgetId, hideRead, entryCount, feedIds, color);
+					if ( isSmallWidget ) {
+						SparseRSSAppWidgetProviderSmall.updateAppWidget(WidgetConfigActivity.this, AppWidgetManager.getInstance(WidgetConfigActivity.this), widgetId, feedIds);
+					} else {
+						SparseRSSAppWidgetProvider.updateAppWidget(WidgetConfigActivity.this, AppWidgetManager.getInstance(WidgetConfigActivity.this), widgetId, hideRead, entryCount, feedIds, color);
+					}
 					setResult(RESULT_OK, new Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId));
 					finish();
 				}

@@ -45,11 +45,15 @@ import de.shandschuh.sparserss.provider.FeedData;
 public class SparseRSSAppWidgetProviderSmall extends SparseRSSAppWidgetProvider {
 	
 	@Override
-	void updateAppWidget(Context context, int appWidgetId, boolean hideRead, String entryCount, String feedIds, int backgroundColor) {
-		updateAppWidget(context, AppWidgetManager.getInstance(context), appWidgetId, feedIds);
+	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
+		SharedPreferences preferences = context.getSharedPreferences(SparseRSSAppWidgetProvider.class.getName(), 0);
+		
+		for (int n = 0, i = appWidgetIds.length; n < i; n++) {
+			updateAppWidget(context, appWidgetManager, appWidgetIds[n], preferences.getString(appWidgetIds[n]+".feeds", Strings.EMPTY));
+		}
 	}
 	
-	private static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, String feedIds) {
+	static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, String feedIds) {
 		StringBuilder selection = new StringBuilder();
 		
 		selection.append(FeedData.EntryColumns.READDATE).append(Strings.DB_ISNULL);
@@ -71,8 +75,6 @@ public class SparseRSSAppWidgetProviderSmall extends SparseRSSAppWidgetProvider 
 		
 		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.homescreenwidget_small);
 		views.setOnClickPendingIntent(R.id.news_counter_layout, PendingIntent.getActivity(context, 0, new Intent(context, MainTabActivity.class), 0));
-		//views.setOnClickPendingIntent(R.id.feed_icon_small, PendingIntent.getActivity(context, 0, new Intent(context, MainTabActivity.class), 0));
-		//views.setOnClickPendingIntent(R.id.news_counter, PendingIntent.getActivity(context, 0, new Intent(context, MainTabActivity.class), 0));
 		views.setTextViewText(R.id.news_counter, String.valueOf(k));
 		appWidgetManager.updateAppWidget(appWidgetId, views);
 	}

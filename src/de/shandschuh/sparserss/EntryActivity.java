@@ -183,43 +183,22 @@ public class EntryActivity extends Activity {
 	
 	private boolean localPictures;
 	
-	private TextView titleTextView;
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		
 		if (MainTabActivity.isLightTheme(this)) {
 			setTheme(R.style.Theme_Light);
 		}
 		
 		super.onCreate(savedInstanceState);
 		
-		int titleId = -1;
-		
 		if (MainTabActivity.POSTGINGERBREAD) {
 			canShowIcon = true;
 			setContentView(R.layout.entry);
-			try {
-				/* This is a trick as com.android.internal.R.id.action_bar_title is not directly accessible */
-				titleId = (Integer) Class.forName("com.android.internal.R$id").getField("action_bar_title").get(null);
-			} catch (Exception exception) {
-				
-			}
 		} else {
 			canShowIcon = requestWindowFeature(Window.FEATURE_LEFT_ICON);
 			setContentView(R.layout.entry);
-			titleId = android.R.id.title;
-		}
-		
-		try {
-			titleTextView = (TextView) findViewById(titleId);
-			titleTextView.setSingleLine(true);
-			titleTextView.setHorizontallyScrolling(true);
-			titleTextView.setMarqueeRepeatLimit(1);
-			titleTextView.setEllipsize(TextUtils.TruncateAt.MARQUEE);
-			titleTextView.setFocusable(true);
-			titleTextView.setFocusableInTouchMode(true);
-		} catch (Exception e) {
-			// just in case for non standard android, nullpointer etc
 		}
 		
 		uri = getIntent().getData();
@@ -330,6 +309,15 @@ public class EntryActivity extends Activity {
 		
 		OnTouchListener onTouchListener = new OnTouchListener() {
 			public boolean onTouch(View v, MotionEvent event) {
+				if (event.getAction() == MotionEvent.ACTION_DOWN) {
+					if ( webView.getContentHeight()*webView.getScale() - 0.5f > webView.getHeight() ) {
+						((TextView)findViewById(R.id.title)).setMaxLines(1);
+					}
+				} else if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_CANCEL) {
+					if (webView.getScrollY() == 0) {
+						((TextView)findViewById(R.id.title)).setMaxLines(4);
+					}
+				}
 				return gestureDetector.onTouchEvent(event);
 			}
 		};
@@ -402,10 +390,7 @@ public class EntryActivity extends Activity {
 				finish();
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
 			} else {
-				setTitle(entryCursor.getString(titlePosition));
-				if (titleTextView != null) {
-					titleTextView.requestFocus(); // restart ellipsize
-				}
+				((TextView)findViewById(R.id.title)).setText(entryCursor.getString(titlePosition));
 				
 				int _feedId = entryCursor.getInt(feedIdPosition);
 				
@@ -452,7 +437,7 @@ public class EntryActivity extends Activity {
 				String author = entryCursor.getString(authorPosition);
 				
 				if (author != null && author.length() > 0) {
-					dateStringBuilder.append(BRACKET).append(author).append(')');
+					dateStringBuilder.append(BRACKET).append(author.replace("\n", "").trim()).append(')');
 				}
 				
 				((TextView) findViewById(R.id.entry_date)).setText(dateStringBuilder);
@@ -594,7 +579,7 @@ public class EntryActivity extends Activity {
 		} else {
 			entryCursor.close();
 		}
-		
+		((TextView)findViewById(R.id.title)).setMaxLines(4);
 		/*
 		new Thread() {
 			public void run() {

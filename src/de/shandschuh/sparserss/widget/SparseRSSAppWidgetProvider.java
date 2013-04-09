@@ -55,9 +55,10 @@ public class SparseRSSAppWidgetProvider extends AppWidgetProvider {
 	public void onReceive(Context context, Intent intent) {
 		AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
 		
-		onUpdate(context, appWidgetManager, appWidgetManager.getAppWidgetIds(new ComponentName(context, SparseRSSAppWidgetProvider.class)));
+		onUpdate(context, appWidgetManager, appWidgetManager.getAppWidgetIds(new ComponentName(context, getClass())));
 	}
 	
+	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
 		SharedPreferences preferences = context.getSharedPreferences(SparseRSSAppWidgetProvider.class.getName(), 0);
 		
@@ -66,11 +67,7 @@ public class SparseRSSAppWidgetProvider extends AppWidgetProvider {
 		}
 	}
 	
-	void updateAppWidget(Context context, int appWidgetId, boolean hideRead, String entryCount, String feedIds, int backgroundColor) {
-		updateAppWidget(context, AppWidgetManager.getInstance(context), appWidgetId, hideRead, entryCount, feedIds, backgroundColor);
-	}
-	
-	private static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean hideRead, String entryCount, String feedIds, int backgroundColor) {
+	static void updateAppWidget(Context context, AppWidgetManager appWidgetManager, int appWidgetId, boolean hideRead, String entryCount, String feedIds, int backgroundColor) {
 		StringBuilder selection = new StringBuilder();
 		
 		if (hideRead) {

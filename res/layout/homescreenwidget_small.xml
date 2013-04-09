@@ -23,7 +23,7 @@
         android:layout_marginTop="8dp"
         android:gravity="left|bottom"
         android:singleLine="true"
-        android:text="0"
+        android:text=""
         android:textColor="#000000"
         android:textSize="20sp"
         android:textStyle="bold" />
