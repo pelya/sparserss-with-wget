@@ -653,6 +653,12 @@ public class EntryActivity extends Activity {
 		reload();
 		
 		if (animate) {
+			webView.clearView();
+			if (MainTabActivity.isLightTheme(this) || preferences.getBoolean(Strings.SETTINGS_BLACKTEXTONWHITE, false)) {
+				webView.setBackgroundColor(Color.WHITE);
+			} else {
+				webView.setBackgroundColor(Color.BLACK);
+			}
 			viewFlipper.setInAnimation(inAnimation);
 			viewFlipper.setOutAnimation(outAnimation);
 			viewFlipper.addView(webView, layoutParams);
