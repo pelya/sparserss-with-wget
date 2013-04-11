@@ -179,6 +179,8 @@
     <string name="feed_title">Title</string>
     <string name="select_file">Select file (SD-root)</string>
     <string name="refreshonwifionly">Refresh only over Wifi</string>
+    <string name="downloadtargetwebpage">Download target webpage</string>
+    <string name="requestdesktopwebpage">Request desktop site</string>
     <string name="changelog">Changelog</string>
 
     <string name="red">Red</string>

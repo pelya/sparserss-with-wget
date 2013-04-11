@@ -37,5 +37,15 @@
             android:id="@+id/wifionlycheckbox"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"/>
+        <CheckBox
+            android:text="@string/downloadtargetwebpage"
+            android:id="@+id/downloadtargetwebpage"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"/>
+        <CheckBox
+            android:text="@string/requestdesktopwebpage"
+            android:id="@+id/requestdesktopwebpage"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"/>
     </LinearLayout>
 </ScrollView>

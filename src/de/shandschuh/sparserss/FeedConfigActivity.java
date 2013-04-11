@@ -41,13 +41,17 @@ import de.shandschuh.sparserss.provider.FeedData;
 public class FeedConfigActivity extends Activity {
 	private static final String WASACTIVE = "wasactive";
 	
-	private static final String[] PROJECTION = new String[] {FeedData.FeedColumns.NAME, FeedData.FeedColumns.URL, FeedData.FeedColumns.WIFIONLY};
+	private static final String[] PROJECTION = new String[] {FeedData.FeedColumns.NAME, FeedData.FeedColumns.URL, FeedData.FeedColumns.WIFIONLY, FeedData.FeedColumns.SAVEPAGES, FeedData.FeedColumns.SAVEPAGESDESKTOP};
 	
 	private EditText nameEditText;
 	
 	private EditText urlEditText;
 	
 	private CheckBox refreshOnlyWifiCheckBox;
+	
+	private CheckBox downloadTargetWebpage;
+	
+	private CheckBox requestDesktopWebpage;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +65,9 @@ public class FeedConfigActivity extends Activity {
 		nameEditText = (EditText) findViewById(R.id.feed_title);
 		urlEditText = (EditText) findViewById(R.id.feed_url);
 		refreshOnlyWifiCheckBox = (CheckBox) findViewById(R.id.wifionlycheckbox);
-			
+		downloadTargetWebpage = (CheckBox) findViewById(R.id.downloadtargetwebpage);
+		requestDesktopWebpage = (CheckBox) findViewById(R.id.requestdesktopwebpage);
+		
 		if (intent.getAction().equals(Intent.ACTION_INSERT)) {
 			setTitle(R.string.newfeed_title);
 			restoreInstanceState(savedInstanceState);
@@ -83,6 +89,8 @@ public class FeedConfigActivity extends Activity {
 						ContentValues values = new ContentValues();
 						
 						values.put(FeedData.FeedColumns.WIFIONLY, refreshOnlyWifiCheckBox.isChecked() ? 1 : 0);
+						values.put(FeedData.FeedColumns.SAVEPAGES, downloadTargetWebpage.isChecked() ? 1 : 0);
+						values.put(FeedData.FeedColumns.SAVEPAGESDESKTOP, requestDesktopWebpage.isChecked() ? 1 : 0);
 						values.put(FeedData.FeedColumns.URL, url);
 						values.put(FeedData.FeedColumns.ERROR, (String) null);
 						
@@ -107,6 +115,8 @@ public class FeedConfigActivity extends Activity {
 					nameEditText.setText(cursor.getString(0));
 					urlEditText.setText(cursor.getString(1));
 					refreshOnlyWifiCheckBox.setChecked(cursor.getInt(2) == 1);
+					downloadTargetWebpage.setChecked(cursor.getInt(3) == 1);
+					requestDesktopWebpage.setChecked(cursor.getInt(4) == 1);
 					cursor.close();
 				} else {
 					cursor.close();
@@ -137,6 +147,8 @@ public class FeedConfigActivity extends Activity {
 						values.put(FeedData.FeedColumns.NAME, name.trim().length() > 0 ? name : null);
 						values.put(FeedData.FeedColumns.FETCHMODE, 0);
 						values.put(FeedData.FeedColumns.WIFIONLY, refreshOnlyWifiCheckBox.isChecked() ? 1 : 0);
+						values.put(FeedData.FeedColumns.SAVEPAGES, downloadTargetWebpage.isChecked() ? 1 : 0);
+						values.put(FeedData.FeedColumns.SAVEPAGESDESKTOP, requestDesktopWebpage.isChecked() ? 1 : 0);
 						values.put(FeedData.FeedColumns.ERROR, (String) null);
 						getContentResolver().update(getIntent().getData(), values, null, null);
 						
@@ -161,6 +173,8 @@ public class FeedConfigActivity extends Activity {
 			nameEditText.setText(savedInstanceState.getCharSequence(FeedData.FeedColumns.NAME));
 			urlEditText.setText(savedInstanceState.getCharSequence(FeedData.FeedColumns.URL));
 			refreshOnlyWifiCheckBox.setChecked(savedInstanceState.getBoolean(FeedData.FeedColumns.WIFIONLY));
+			downloadTargetWebpage.setChecked(savedInstanceState.getBoolean(FeedData.FeedColumns.SAVEPAGES));
+			requestDesktopWebpage.setChecked(savedInstanceState.getBoolean(FeedData.FeedColumns.SAVEPAGESDESKTOP));
 			return true;
 		} else {
 			return false;
@@ -173,6 +187,8 @@ public class FeedConfigActivity extends Activity {
 		outState.putCharSequence(FeedData.FeedColumns.NAME, nameEditText.getText());
 		outState.putCharSequence(FeedData.FeedColumns.URL, urlEditText.getText());
 		outState.putBoolean(FeedData.FeedColumns.WIFIONLY, refreshOnlyWifiCheckBox.isChecked());
+		outState.putBoolean(FeedData.FeedColumns.SAVEPAGES, downloadTargetWebpage.isChecked());
+		outState.putBoolean(FeedData.FeedColumns.SAVEPAGESDESKTOP, requestDesktopWebpage.isChecked());
 	}
 
 }
