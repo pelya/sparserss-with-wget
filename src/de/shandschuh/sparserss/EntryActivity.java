@@ -151,8 +151,6 @@ public class EntryActivity extends Activity {
 	
 	private boolean showRead;
 	
-	private boolean canShowIcon;
-	
 	private byte[] iconBytes;
 	
 	private WebView webView;
@@ -193,13 +191,7 @@ public class EntryActivity extends Activity {
 		
 		super.onCreate(savedInstanceState);
 		
-		if (MainTabActivity.POSTGINGERBREAD) {
-			canShowIcon = true;
-			setContentView(R.layout.entry);
-		} else {
-			canShowIcon = requestWindowFeature(Window.FEATURE_LEFT_ICON);
-			setContentView(R.layout.entry);
-		}
+		setContentView(R.layout.entry);
 		
 		uri = getIntent().getData();
 		parentUri = FeedData.EntryColumns.PARENT_URI(uri.getPath());
@@ -401,33 +393,6 @@ public class EntryActivity extends Activity {
 					feedId = _feedId;
 				}
 				
-				if (canShowIcon) {
-					if (iconBytes == null || iconBytes.length == 0) {
-						Cursor iconCursor = getContentResolver().query(FeedData.FeedColumns.CONTENT_URI(Integer.toString(feedId)), new String[] {FeedData.FeedColumns._ID, FeedData.FeedColumns.ICON}, null, null, null);
-						
-						if (iconCursor.moveToFirst()) {
-							iconBytes = iconCursor.getBlob(1);
-						}
-						iconCursor.close();
-					}
-					
-					if (iconBytes != null && iconBytes.length > 0) {
-						int bitmapSizeInDip = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 24f, getResources().getDisplayMetrics());
-						Bitmap bitmap = BitmapFactory.decodeByteArray(iconBytes, 0, iconBytes.length);
-						if (bitmap != null) {
-							if (bitmap.getHeight() != bitmapSizeInDip) {
-								bitmap = Bitmap.createScaledBitmap(bitmap, bitmapSizeInDip, bitmapSizeInDip, false);
-							}
-							
-							if (MainTabActivity.POSTGINGERBREAD) {
-								CompatibilityHelper.setActionBarDrawable(this, new BitmapDrawable(bitmap));
-							} else {
-								setFeatureDrawable(Window.FEATURE_LEFT_ICON, new BitmapDrawable(bitmap));
-							}
-						}
-					}
-				}
-				
 				long timestamp = entryCursor.getLong(datePosition);
 				
 				Date date = new Date(timestamp);
@@ -457,6 +422,30 @@ public class EntryActivity extends Activity {
 						getContentResolver().update(uri, values, null, null);
 					}
 				});
+				
+				if (iconBytes == null || iconBytes.length == 0) {
+					Cursor iconCursor = getContentResolver().query(FeedData.FeedColumns.CONTENT_URI(Integer.toString(feedId)), new String[] {FeedData.FeedColumns._ID, FeedData.FeedColumns.ICON}, null, null, null);
+					
+					if (iconCursor.moveToFirst()) {
+						iconBytes = iconCursor.getBlob(1);
+					}
+					iconCursor.close();
+				}
+				
+				ImageView feedIcon = (ImageView)findViewById(R.id.feed_icon);
+				if (iconBytes != null && iconBytes.length > 0) {
+					Bitmap bitmap = BitmapFactory.decodeByteArray(iconBytes, 0, iconBytes.length);
+					if (bitmap != null) {
+						// Make it the same size as favorites icon
+						if (imageView.getDrawable().getIntrinsicHeight() > 0) {
+							bitmap = Bitmap.createScaledBitmap(bitmap, imageView.getDrawable().getIntrinsicHeight(), imageView.getDrawable().getIntrinsicHeight(), true);
+						}
+						feedIcon.setImageBitmap(bitmap);
+					}
+				} else {
+					feedIcon.setImageResource(R.drawable.empty);
+				}
+
 				// loadData does not recognize the encoding without correct html-header
 				localPictures = abstractText.indexOf(Strings.IMAGEID_REPLACEMENT) > -1;
 				

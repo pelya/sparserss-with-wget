@@ -16,15 +16,21 @@
             android:autoLink="email"/>
     </LinearLayout>
     <LinearLayout
-        android:paddingLeft="4pt"
+        android:paddingLeft="2pt"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:scaleType="fitCenter"
+            android:id="@+id/feed_icon"/>
         <TextView
-            android:paddingTop="2pt"
+            android:paddingLeft="2pt"
             android:layout_height="wrap_content"
             android:id="@+id/entry_date"
             android:layout_width="0dip"
-            android:layout_gravity="fill"
+            android:layout_gravity="center_vertical|fill_horizontal"
             android:layout_weight="1"
             android:autoLink="email"/>
         <ImageView
