@@ -239,6 +239,8 @@ public class FetcherService extends IntentService {
 				
 				connection = setupConnection(feedUrl, imposeUserAgent, followHttpHttpsRedirects);
 				
+				String redirectHost = connection.getURL().getHost(); // Feed icon should be fetched from target site, not from feedburner, so we're tracking all redirections
+				
 				String contentType = connection.getContentType();
 
 				int fetchMode = cursor.getInt(fetchmodePosition);
@@ -282,6 +284,7 @@ public class FetcherService extends IntentService {
 										}
 										values.put(FeedData.FeedColumns.URL, url);
 										context.getContentResolver().update(FeedData.FeedColumns.CONTENT_URI(id), values, null, null);
+										redirectHost = connection.getURL().getHost();
 										connection.disconnect();
 										connection = setupConnection(url, imposeUserAgent, followHttpHttpsRedirects);
 										contentType = connection.getContentType();
@@ -291,6 +294,7 @@ public class FetcherService extends IntentService {
 							}
 						}
 						if (posStart == -1) { // this indicates a badly configured feed
+							redirectHost = connection.getURL().getHost();
 							connection.disconnect();
 							connection = setupConnection(feedUrl, imposeUserAgent, followHttpHttpsRedirects);
 							contentType = connection.getContentType();
@@ -322,7 +326,7 @@ public class FetcherService extends IntentService {
 						int length = bufferedReader.read(chars);
 
 						String xmlDescription = new String(chars, 0, length);
-						
+						redirectHost = connection.getURL().getHost();
 						connection.disconnect();
 						connection = setupConnection(connection.getURL(), imposeUserAgent, followHttpHttpsRedirects);
 						
@@ -350,7 +354,7 @@ public class FetcherService extends IntentService {
 				byte[] iconBytes = cursor.getBlob(iconPosition);
 				
 				if (iconBytes == null) {
-					HttpURLConnection iconURLConnection = setupConnection(new URL(new StringBuilder(connection.getURL().getProtocol()).append(Strings.PROTOCOL_SEPARATOR).append(connection.getURL().getHost()).append(Strings.FILE_FAVICON).toString()), imposeUserAgent, followHttpHttpsRedirects);
+					HttpURLConnection iconURLConnection = setupConnection(new URL(new StringBuilder(connection.getURL().getProtocol()).append(Strings.PROTOCOL_SEPARATOR).append(redirectHost).append(Strings.FILE_FAVICON).toString()), imposeUserAgent, followHttpHttpsRedirects);
 					
 					try {
 						iconBytes = getBytes(getConnectionInputStream(iconURLConnection));
