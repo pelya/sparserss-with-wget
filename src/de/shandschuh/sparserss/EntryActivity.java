@@ -437,8 +437,8 @@ public class EntryActivity extends Activity {
 					Bitmap bitmap = BitmapFactory.decodeByteArray(iconBytes, 0, iconBytes.length);
 					if (bitmap != null) {
 						// Make it the same size as favorites icon
-						if (imageView.getDrawable().getIntrinsicHeight() > 0) {
-							bitmap = Bitmap.createScaledBitmap(bitmap, imageView.getDrawable().getIntrinsicHeight(), imageView.getDrawable().getIntrinsicHeight(), true);
+						if (imageView.getDrawable().getIntrinsicHeight() > 6) {
+							bitmap = Bitmap.createScaledBitmap(bitmap, imageView.getDrawable().getIntrinsicHeight() - 6, imageView.getDrawable().getIntrinsicHeight() - 6, true);
 						}
 						feedIcon.setImageBitmap(bitmap);
 					}
