@@ -81,6 +81,8 @@ public class FeedDataContentProvider extends ContentProvider {
 	
 	public static final File IMAGEFOLDER_FILE = new File(IMAGEFOLDER);
 	
+	public static final String WEBCACHEFOLDER = Environment.getExternalStorageDirectory() + "/sparserss/webcache";
+	
 	private static final String BACKUPOPML = Environment.getExternalStorageDirectory()+"/sparserss/backup.opml";
 	
 	private static UriMatcher URI_MATCHER;

@@ -135,6 +135,8 @@ public class EntryActivity extends Activity {
 	
 	private int authorPosition;
 	
+	private int savedPagePosition;
+	
 	private String _id;
 	
 	private String _nextId;
@@ -210,6 +212,7 @@ public class EntryActivity extends Activity {
 		readDatePosition = entryCursor.getColumnIndex(FeedData.EntryColumns.READDATE);
 		enclosurePosition = entryCursor.getColumnIndex(FeedData.EntryColumns.ENCLOSURE);
 		authorPosition = entryCursor.getColumnIndex(FeedData.EntryColumns.AUTHOR);
+		savedPagePosition = entryCursor.getColumnIndex(FeedData.EntryColumns.SAVEDPAGE);
 		
 		entryCursor.close();
 		if (RSSOverview.notificationManager == null) {
@@ -371,6 +374,7 @@ public class EntryActivity extends Activity {
 		
 		if (entryCursor.moveToFirst()) {
 			String abstractText = entryCursor.getString(abstractPosition);
+			String savedPage = entryCursor.getString(savedPagePosition);
 			
 			if (entryCursor.isNull(readDatePosition)) {
 				getContentResolver().update(uri, values, new StringBuilder(FeedData.EntryColumns.READDATE).append(Strings.DB_ISNULL).toString(), null);
@@ -475,22 +479,33 @@ public class EntryActivity extends Activity {
 				}
 				*/
 				
-				if (MainTabActivity.isLightTheme(this) || preferences.getBoolean(Strings.SETTINGS_BLACKTEXTONWHITE, false)) {
-					if (fontsize > 0) {
-						webView.loadDataWithBaseURL(null, new StringBuilder(CSS).append(FONTSIZE_START).append(fontsize).append(FONTSIZE_MIDDLE).append(abstractText).append(FONTSIZE_END).toString(), TEXT_HTML, UTF8, null);
+				if (savedPage != null && savedPage.length() > 0) {
+					webView.loadUrl("file://" + savedPage);
+					if (MainTabActivity.isLightTheme(this) || preferences.getBoolean(Strings.SETTINGS_BLACKTEXTONWHITE, false)) {
+						webView.setBackgroundColor(Color.WHITE);
+						content.setBackgroundColor(Color.WHITE);
 					} else {
-						webView.loadDataWithBaseURL(null, new StringBuilder(CSS).append(BODY_START).append(abstractText).append(BODY_END).toString(), TEXT_HTML, UTF8, null);
+						webView.setBackgroundColor(Color.BLACK);
+						content.setBackgroundColor(Color.BLACK);
 					}
-					webView.setBackgroundColor(Color.WHITE);
-					content.setBackgroundColor(Color.WHITE);
 				} else {
-					if (fontsize > 0) {
-						webView.loadDataWithBaseURL(null, new StringBuilder(FONT_FONTSIZE_START).append(fontsize).append(FONTSIZE_MIDDLE).append(abstractText).append(FONT_END).toString(), TEXT_HTML, UTF8, null);
+					if (MainTabActivity.isLightTheme(this) || preferences.getBoolean(Strings.SETTINGS_BLACKTEXTONWHITE, false)) {
+						if (fontsize > 0) {
+							webView.loadDataWithBaseURL(null, new StringBuilder(CSS).append(FONTSIZE_START).append(fontsize).append(FONTSIZE_MIDDLE).append(abstractText).append(FONTSIZE_END).toString(), TEXT_HTML, UTF8, null);
+						} else {
+							webView.loadDataWithBaseURL(null, new StringBuilder(CSS).append(BODY_START).append(abstractText).append(BODY_END).toString(), TEXT_HTML, UTF8, null);
+						}
+						webView.setBackgroundColor(Color.WHITE);
+						content.setBackgroundColor(Color.WHITE);
 					} else {
-						webView.loadDataWithBaseURL(null, new StringBuilder(FONT_START).append(abstractText).append(BODY_END).toString(), TEXT_HTML, UTF8, null);
+						if (fontsize > 0) {
+							webView.loadDataWithBaseURL(null, new StringBuilder(FONT_FONTSIZE_START).append(fontsize).append(FONTSIZE_MIDDLE).append(abstractText).append(FONT_END).toString(), TEXT_HTML, UTF8, null);
+						} else {
+							webView.loadDataWithBaseURL(null, new StringBuilder(FONT_START).append(abstractText).append(BODY_END).toString(), TEXT_HTML, UTF8, null);
+						}
+						webView.setBackgroundColor(Color.BLACK);
+						content.setBackgroundColor(Color.BLACK);
 					}
-					webView.setBackgroundColor(Color.BLACK);
-					content.setBackgroundColor(Color.BLACK);
 				}
 				
 				link = entryCursor.getString(linkPosition);

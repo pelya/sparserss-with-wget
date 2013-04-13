@@ -65,6 +65,8 @@ import de.shandschuh.sparserss.R;
 import de.shandschuh.sparserss.Strings;
 import de.shandschuh.sparserss.handler.RSSHandler;
 import de.shandschuh.sparserss.provider.FeedData;
+import de.shandschuh.sparserss.service.WgetDownloader;
+
 
 public class FetcherService extends IntentService {
 	private static final int FETCHMODE_DIRECT = 1;
@@ -467,6 +469,7 @@ public class FetcherService extends IntentService {
 		if (result > 0) {
 			context.sendBroadcast(new Intent(Strings.ACTION_UPDATEWIDGET).putExtra(Strings.COUNT, result));
 		}
+		WgetDownloader.download(context, feedId, preferences);
 		return result;
 	}
 	
