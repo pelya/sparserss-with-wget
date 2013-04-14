@@ -221,6 +221,10 @@ public class RSSHandler extends DefaultHandler {
 	
 	private boolean iconTagEntered;
 	
+	private boolean entryTagEntered;
+	
+	private String feedLinkUrl;
+	
 	private StringBuilder icon;
 	
 	public RSSHandler(Context context) {
@@ -281,6 +285,8 @@ public class RSSHandler extends DefaultHandler {
 		author = null;
 		nameTagEntered = false;
 		iconTagEntered = false;
+		entryTagEntered = false;
+		feedLinkUrl = null;
 	}
 
 	@Override
@@ -289,6 +295,7 @@ public class RSSHandler extends DefaultHandler {
 			updatedTagEntered = true;
 			dateStringBuilder = new StringBuilder();
 		} else if (TAG_ENTRY.equals(localName) || TAG_ITEM.equals(localName)) {
+			entryTagEntered = true;
 			description = null;
 			entryLink = null;
 			if (!feedRefreshed) {
@@ -436,6 +443,9 @@ public class RSSHandler extends DefaultHandler {
 			descriptionTagEntered = false;
 		} else if (TAG_LINK.equals(localName)) {
 			linkTagEntered = false;
+			if (!entryTagEntered && TAG_LINK.equals(qName)) { // Skip <atom10:link> tags
+				feedLinkUrl = entryLink.toString();
+			}
 		} else if (TAG_UPDATED.equals(localName)) {
 			entryDate = parseUpdateDate(dateStringBuilder.toString());
 			updatedTagEntered = false;
@@ -449,6 +459,7 @@ public class RSSHandler extends DefaultHandler {
 			entryDate = parseUpdateDate(dateStringBuilder.toString());
 			dateTagEntered = false;
 		} else if (TAG_ENTRY.equals(localName) || TAG_ITEM.equals(localName)) {
+			entryTagEntered = false;
 			if (title != null && (entryDate == null || ((entryDate.after(lastUpdateDate) || !efficientFeedParsing) && entryDate.after(keepDateBorder)))) {
 				ContentValues values = new ContentValues();
 				
@@ -671,5 +682,9 @@ public class RSSHandler extends DefaultHandler {
 			return null;
 		}
 		return icon.toString();
+	}
+
+	public String getFeedLinkUrl() {
+		return feedLinkUrl;
 	}
 }

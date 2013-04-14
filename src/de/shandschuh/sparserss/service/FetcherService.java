@@ -428,6 +428,8 @@ public class FetcherService extends IntentService {
 					HttpURLConnection iconURLConnection;
 					if (handler.getIconUrl() != null) {
 						iconURLConnection = setupConnection(new URL(handler.getIconUrl()), imposeUserAgent, followHttpHttpsRedirects);
+					} else if (handler.getFeedLinkUrl() != null) {
+						iconURLConnection = setupConnection(new URL(new StringBuilder(connection.getURL().getProtocol()).append(Strings.PROTOCOL_SEPARATOR).append(new URL(handler.getFeedLinkUrl()).getHost()).append(Strings.FILE_FAVICON).toString()), imposeUserAgent, followHttpHttpsRedirects);
 					} else {
 						iconURLConnection = setupConnection(new URL(new StringBuilder(connection.getURL().getProtocol()).append(Strings.PROTOCOL_SEPARATOR).append(redirectHost).append(Strings.FILE_FAVICON).toString()), imposeUserAgent, followHttpHttpsRedirects);
 					}
