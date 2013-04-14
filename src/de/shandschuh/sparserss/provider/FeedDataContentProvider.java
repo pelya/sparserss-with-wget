@@ -1,7 +1,7 @@
 /**
  * Sparse rss
  *
- * Copyright (c) 2010-2012 Stefan Handschuh
+ * Copyright (c) 2010-2013 Stefan Handschuh
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,6 +41,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import de.shandschuh.sparserss.Strings;
 
@@ -49,7 +50,7 @@ public class FeedDataContentProvider extends ContentProvider {
 	
 	private static final String DATABASE_NAME = "sparserss.db";
 	
-	private static final int DATABASE_VERSION = 12;
+	private static final int DATABASE_VERSION = 13;
 	
 	private static final int URI_FEEDS = 1;
 	
@@ -111,8 +112,11 @@ public class FeedDataContentProvider extends ContentProvider {
 	}
 	
 	private static class DatabaseHelper extends SQLiteOpenHelper {
+		private Context context;
+		
 		public DatabaseHelper(Context context, String name, int version) {
-			super(context, name, null, version);
+			super(context, name, null, version); // the constructor just sets the values and returns, therefore context cannot be null
+			this.context = context;
 			context.sendBroadcast(new Intent(Strings.ACTION_UPDATEWIDGET));
 		}
 
@@ -185,6 +189,13 @@ public class FeedDataContentProvider extends ContentProvider {
 				executeCatchedSQL(database, new StringBuilder(ALTER_TABLE).append(TABLE_ENTRIES).append(ADD).append(FeedData.EntryColumns.AUTHOR).append(' ').append(FeedData.TYPE_TEXT).toString());
 			}
 			if (oldVersion < 12) {
+				executeCatchedSQL(database, new StringBuilder(ALTER_TABLE).append(TABLE_FEEDS).append(ADD).append(FeedData.FeedColumns.IMPOSE_USERAGENT).append(' ').append(FeedData.TYPE_BOOLEAN).toString());
+				if (!PreferenceManager.getDefaultSharedPreferences(context).getBoolean(Strings.SETTINGS_STANDARDUSERAGENT, true)) {
+					// no "DEFAULT" syntax
+					executeCatchedSQL(database, new StringBuilder("UPDATE ").append(TABLE_FEEDS).append(" SET ").append(FeedData.FeedColumns.IMPOSE_USERAGENT).append("='1'").toString());
+				}
+			}
+			if (oldVersion < 13) {
 				executeCatchedSQL(database, new StringBuilder(ALTER_TABLE).append(TABLE_ENTRIES).append(ADD).append(FeedData.EntryColumns.SAVEDPAGE).append(' ').append(FeedData.TYPE_TEXT).toString());
 				executeCatchedSQL(database, new StringBuilder(ALTER_TABLE).append(TABLE_FEEDS).append(ADD).append(FeedData.FeedColumns.SAVEPAGES).append(' ').append(FeedData.TYPE_BOOLEAN).toString());
 				executeCatchedSQL(database, new StringBuilder(ALTER_TABLE).append(TABLE_FEEDS).append(ADD).append(FeedData.FeedColumns.SAVEPAGESDESKTOP).append(' ').append(FeedData.TYPE_BOOLEAN).toString());

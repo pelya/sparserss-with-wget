@@ -38,6 +38,12 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"/>
         <CheckBox
+            android:text="@string/settings_standarduseragent"
+            android:id="@+id/standarduseragentcheckbox"
+            android:checked="true"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"/>
+        <CheckBox
             android:text="@string/downloadtargetwebpage"
             android:id="@+id/downloadtargetwebpage"
             android:layout_width="fill_parent"
