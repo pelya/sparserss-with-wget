@@ -82,11 +82,11 @@ public class WgetDownloader {
 	}
 	
 	public static void download(final Context context, final String feedId, final SharedPreferences preferences) {
+		if (running) {
+			return;
+		}
 		new Thread(new Runnable() {
 			public void run() {
-				if (running) {
-					return;
-				}
 				try {
 					running = true;
 					downloadThread(context, feedId, preferences);
@@ -104,6 +104,8 @@ public class WgetDownloader {
 		if ( !checkWifi(connectivityManager) || !downloadWgetBinary(context) ) {
 			return;
 		}
+		
+		deleteWebCacheIfNeeded(preferences);
 		
 		new File(FeedDataContentProvider.WEBCACHEFOLDER).mkdirs();
 		
@@ -256,5 +258,25 @@ public class WgetDownloader {
 		}
 		//System.out.println("Downloading wget from: " + WGET_BINARY_URL + " to: " + wgetPath + " : done");
 		return true;
+	}
+	
+	private static void deleteWebCacheIfNeeded(SharedPreferences preferences) {
+		long keepTime = Long.parseLong(preferences.getString(Strings.SETTINGS_KEEPTIME, "4"))*86400l;
+		if (new File(FeedDataContentProvider.WEBCACHEFOLDER).lastModified() > System.currentTimeMillis() / 1000 + keepTime) {
+			deleteRecursively(new File(FeedDataContentProvider.WEBCACHEFOLDER));
+		}
+	}
+	
+	public static boolean deleteRecursively(File dir)
+	{
+		if (dir.isDirectory()) {
+			String[] children = dir.list();
+			for (int i=0; i<children.length; i++) {
+				boolean success = deleteRecursively(new File(dir, children[i]));
+				if (!success)
+					return false;
+			}
+		}
+		return dir.delete();
 	}
 }
