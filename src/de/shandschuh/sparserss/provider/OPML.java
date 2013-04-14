@@ -59,7 +59,7 @@ public class OPML {
 	
 	private static final String ATTRIBUTE_CATEGORY_SAVEPAGES = "/" + FeedData.FeedColumns.SAVEPAGES;
 	
-	private static final String ATTRIBUTE_CATEGORY_SAVEPAGESDESKTOP = "/" + FeedData.FeedColumns.SAVEPAGES;
+	private static final String ATTRIBUTE_CATEGORY_SAVEPAGESDESKTOP = "/" + FeedData.FeedColumns.SAVEPAGESDESKTOP;
 	
 	private static final String OUTLINE_CATEGORY = "\" category=\"";
 	
