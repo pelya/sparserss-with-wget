@@ -105,6 +105,8 @@ public class FetcherService extends IntentService {
 	
 	private static Proxy proxy;
 	
+	private static String redirectHost;
+	
 	public FetcherService() {
 		super(SERVICENAME);
 		HttpURLConnection.setFollowRedirects(true);
@@ -241,7 +243,7 @@ public class FetcherService extends IntentService {
 				
 				connection = setupConnection(feedUrl, imposeUserAgent, followHttpHttpsRedirects);
 				
-				String redirectHost = connection.getURL().getHost(); // Feed icon should be fetched from target site, not from feedburner, so we're tracking all redirections
+				redirectHost = connection.getURL().getHost(); // Feed icon should be fetched from target site, not from feedburner, so we're tracking all redirections
 				
 				String contentType = connection.getContentType();
 
@@ -286,7 +288,6 @@ public class FetcherService extends IntentService {
 										}
 										values.put(FeedData.FeedColumns.URL, url);
 										context.getContentResolver().update(FeedData.FeedColumns.CONTENT_URI(id), values, null, null);
-										redirectHost = connection.getURL().getHost();
 										connection.disconnect();
 										connection = setupConnection(url, imposeUserAgent, followHttpHttpsRedirects);
 										contentType = connection.getContentType();
@@ -296,7 +297,6 @@ public class FetcherService extends IntentService {
 							}
 						}
 						if (posStart == -1) { // this indicates a badly configured feed
-							redirectHost = connection.getURL().getHost();
 							connection.disconnect();
 							connection = setupConnection(feedUrl, imposeUserAgent, followHttpHttpsRedirects);
 							contentType = connection.getContentType();
@@ -328,7 +328,6 @@ public class FetcherService extends IntentService {
 						int length = bufferedReader.read(chars);
 
 						String xmlDescription = new String(chars, 0, length);
-						redirectHost = connection.getURL().getHost();
 						connection.disconnect();
 						connection = setupConnection(connection.getURL(), imposeUserAgent, followHttpHttpsRedirects);
 						
@@ -352,28 +351,6 @@ public class FetcherService extends IntentService {
 					context.getContentResolver().update(FeedData.FeedColumns.CONTENT_URI(id), values, null, null);
 				}
 				
-				/* check and optionally find favicon */
-				byte[] iconBytes = cursor.getBlob(iconPosition);
-				
-				if (iconBytes == null) {
-					HttpURLConnection iconURLConnection = setupConnection(new URL(new StringBuilder(connection.getURL().getProtocol()).append(Strings.PROTOCOL_SEPARATOR).append(redirectHost).append(Strings.FILE_FAVICON).toString()), imposeUserAgent, followHttpHttpsRedirects);
-					
-					try {
-						iconBytes = getBytes(getConnectionInputStream(iconURLConnection));
-						ContentValues values = new ContentValues();
-						
-						values.put(FeedData.FeedColumns.ICON, iconBytes);
-						context.getContentResolver().update(FeedData.FeedColumns.CONTENT_URI(id), values, null, null);
-					} catch (Exception e) {
-						ContentValues values = new ContentValues();
-						
-						values.put(FeedData.FeedColumns.ICON, new byte[0]); // no icon found or error
-						context.getContentResolver().update(FeedData.FeedColumns.CONTENT_URI(id), values, null, null);
-					} finally {
-						iconURLConnection.disconnect();
-					}
-					
-				}
 				switch (fetchMode) {
 					default:
 					case FETCHMODE_DIRECT: {
@@ -443,6 +420,34 @@ public class FetcherService extends IntentService {
 					}
 				}
 				connection.disconnect();
+				
+				/* check and optionally find favicon */
+				byte[] iconBytes = cursor.getBlob(iconPosition);
+				
+				if (iconBytes == null) {
+					HttpURLConnection iconURLConnection;
+					if (handler.getIconUrl() != null) {
+						iconURLConnection = setupConnection(new URL(handler.getIconUrl()), imposeUserAgent, followHttpHttpsRedirects);
+					} else {
+						iconURLConnection = setupConnection(new URL(new StringBuilder(connection.getURL().getProtocol()).append(Strings.PROTOCOL_SEPARATOR).append(redirectHost).append(Strings.FILE_FAVICON).toString()), imposeUserAgent, followHttpHttpsRedirects);
+					}
+					
+					try {
+						iconBytes = getBytes(getConnectionInputStream(iconURLConnection));
+						ContentValues values = new ContentValues();
+						
+						values.put(FeedData.FeedColumns.ICON, iconBytes);
+						context.getContentResolver().update(FeedData.FeedColumns.CONTENT_URI(id), values, null, null);
+					} catch (Exception e) {
+						ContentValues values = new ContentValues();
+						
+						values.put(FeedData.FeedColumns.ICON, new byte[0]); // no icon found or error
+						context.getContentResolver().update(FeedData.FeedColumns.CONTENT_URI(id), values, null, null);
+					} finally {
+						iconURLConnection.disconnect();
+					}
+				}
+				
 			} catch (FileNotFoundException e) {
 				if (!handler.isDone() && !handler.isCancelled()) {
 					ContentValues values = new ContentValues();
@@ -543,7 +548,7 @@ public class FetcherService extends IntentService {
 	 */
 	private static InputStream getConnectionInputStream(HttpURLConnection connection) throws IOException {
 		InputStream inputStream = connection.getInputStream();
-		
+		redirectHost = connection.getURL().getHost();
 		if (GZIP.equals(connection.getContentEncoding()) && !(inputStream instanceof GZIPInputStream)) {
 			return new GZIPInputStream(inputStream);
 		} else {

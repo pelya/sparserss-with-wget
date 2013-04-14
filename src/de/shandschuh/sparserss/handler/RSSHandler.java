@@ -100,6 +100,8 @@ public class RSSHandler extends DefaultHandler {
 	
 	private static final String TAG_CREATOR = "creator";
 	
+	private static final String TAG_ICON = "icon";
+	
 	private static final String ATTRIBUTE_URL = "url";
 	
 	private static final String ATTRIBUTE_HREF = "href";
@@ -217,6 +219,10 @@ public class RSSHandler extends DefaultHandler {
 	
 	private boolean nameTagEntered;
 	
+	private boolean iconTagEntered;
+	
+	private StringBuilder icon;
+	
 	public RSSHandler(Context context) {
 		KEEP_TIME = Long.parseLong(PreferenceManager.getDefaultSharedPreferences(context).getString(Strings.SETTINGS_KEEPTIME, "4"))*86400000l;
 		this.context = context;
@@ -273,6 +279,8 @@ public class RSSHandler extends DefaultHandler {
 		guidTagEntered = false;
 		authorTagEntered = false;
 		author = null;
+		nameTagEntered = false;
+		iconTagEntered = false;
 	}
 
 	@Override
@@ -371,6 +379,9 @@ public class RSSHandler extends DefaultHandler {
 			}
 		} else if (TAG_NAME.equals(localName)) {
 			nameTagEntered = true;
+		} else if (TAG_ICON.equals(localName)) {
+			iconTagEntered = true;
+			icon = new StringBuilder();
 		}
 	}
 	
@@ -412,6 +423,8 @@ public class RSSHandler extends DefaultHandler {
 			guid.append(ch, start, length);
 		} else if (authorTagEntered && nameTagEntered) {
 			author.append(ch, start, length);
+		} else if (iconTagEntered) {
+			icon.append(ch, start, length);
 		}
 	}
 	
@@ -566,6 +579,8 @@ public class RSSHandler extends DefaultHandler {
 			nameTagEntered = false;
 		} else if (TAG_AUTHOR.equals(localName) || TAG_CREATOR.equals(localName)) {
 			authorTagEntered = false;
+		} else if (TAG_ICON.equals(localName)) {
+			iconTagEntered = false;
 		}
 	}
 	
@@ -651,4 +666,10 @@ public class RSSHandler extends DefaultHandler {
 		this.efficientFeedParsing = efficientFeedParsing;
 	}
 	
+	public String getIconUrl() {
+		if (icon == null) {
+			return null;
+		}
+		return icon.toString();
+	}
 }
