@@ -36,7 +36,10 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.widget.CompoundButton;
 import de.shandschuh.sparserss.provider.FeedData;
+import de.shandschuh.sparserss.service.WgetDownloader;
+
 
 public class FeedConfigActivity extends Activity {
 	private static final String WASACTIVE = "wasactive";
@@ -67,6 +70,16 @@ public class FeedConfigActivity extends Activity {
 		refreshOnlyWifiCheckBox = (CheckBox) findViewById(R.id.wifionlycheckbox);
 		downloadTargetWebpage = (CheckBox) findViewById(R.id.downloadtargetwebpage);
 		requestDesktopWebpage = (CheckBox) findViewById(R.id.requestdesktopwebpage);
+		if (!WgetDownloader.architectureSupported()) {
+			downloadTargetWebpage.setEnabled(false);
+			requestDesktopWebpage.setEnabled(false);
+		}
+		
+		downloadTargetWebpage.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+				requestDesktopWebpage.setEnabled(isChecked);
+			 }
+		});
 		
 		if (intent.getAction().equals(Intent.ACTION_INSERT)) {
 			setTitle(R.string.newfeed_title);
@@ -117,6 +130,7 @@ public class FeedConfigActivity extends Activity {
 					refreshOnlyWifiCheckBox.setChecked(cursor.getInt(2) == 1);
 					downloadTargetWebpage.setChecked(cursor.getInt(3) == 1);
 					requestDesktopWebpage.setChecked(cursor.getInt(4) == 1);
+					requestDesktopWebpage.setEnabled(downloadTargetWebpage.isChecked());
 					cursor.close();
 				} else {
 					cursor.close();
@@ -175,6 +189,7 @@ public class FeedConfigActivity extends Activity {
 			refreshOnlyWifiCheckBox.setChecked(savedInstanceState.getBoolean(FeedData.FeedColumns.WIFIONLY));
 			downloadTargetWebpage.setChecked(savedInstanceState.getBoolean(FeedData.FeedColumns.SAVEPAGES));
 			requestDesktopWebpage.setChecked(savedInstanceState.getBoolean(FeedData.FeedColumns.SAVEPAGESDESKTOP));
+			requestDesktopWebpage.setEnabled(downloadTargetWebpage.isChecked());
 			return true;
 		} else {
 			return false;

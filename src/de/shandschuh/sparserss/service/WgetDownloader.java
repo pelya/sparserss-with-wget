@@ -66,11 +66,42 @@ public class WgetDownloader {
 	
 	private static final String WGET_BINARY_URL = "https://github.com/pelya/wget-android/blob/master/android/wget?raw=true";
 	
-	public static void download(Context context, String feedId, SharedPreferences preferences) {
+	private static final String WGET_BINARY_ARCH = "armeabi";
+	
+	private static final String WGET_TARGET_FILE_LOG = "\nSaving to: ";
+	
+	private static final String ZERO = "0";
+	
+	private static boolean running = false;
+	
+	public static boolean architectureSupported() {
+		if (WGET_BINARY_ARCH.equals(Build.CPU_ABI) || WGET_BINARY_ARCH.equals(Build.CPU_ABI2)) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static void download(final Context context, final String feedId, final SharedPreferences preferences) {
+		new Thread(new Runnable() {
+			public void run() {
+				if (running) {
+					return;
+				}
+				try {
+					running = true;
+					downloadThread(context, feedId, preferences);
+				} finally {
+					running = false;
+				}
+			}
+		}).start();
+	}
+	
+	private static void downloadThread(Context context, String feedId, SharedPreferences preferences) {
 		
 		ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 		
-		if ( !checkWifi(connectivityManager) || !downloadWget(context) ) {
+		if ( !checkWifi(connectivityManager) || !downloadWgetBinary(context) ) {
 			return;
 		}
 		
@@ -83,7 +114,10 @@ public class WgetDownloader {
 			boolean requestDesktopPage = (feedCursor.getInt(1) == 1);
 			
 			Cursor entryCursor = context.getContentResolver().query(FeedData.EntryColumns.CONTENT_URI(feedCursor.getString(0)),
-					new String[] {FeedData.EntryColumns._ID, FeedData.EntryColumns.LINK}, FeedData.EntryColumns.SAVEDPAGE + " IS NULL", null, null);
+					new String[] {FeedData.EntryColumns._ID, FeedData.EntryColumns.LINK},
+					FeedData.EntryColumns.SAVEDPAGE + " IS NULL AND ( " + // Screw StringBuilder! It makes code unreadable
+					FeedData.EntryColumns.READDATE + " IS NULL OR " +
+					FeedData.EntryColumns.FAVORITE + " = 1 )", null, null);
 			
 			while (entryCursor.moveToNext()) {
 				
@@ -97,18 +131,23 @@ public class WgetDownloader {
 				args.add(context.getFilesDir() + "/wget");
 				args.addAll(Arrays.asList(WGET_ARGS));
 				args.add(requestDesktopPage ? DESKTOP_USERAGENT : MOBILE_USERAGENT);
-				args.add("--directory-prefix=" + FeedDataContentProvider.WEBCACHEFOLDER);
 				args.add(entryCursor.getString(1));
-				// TODO: add proxy to args
-				// proxy = new Proxy(ZERO.equals(preferences.getString(Strings.SETTINGS_PROXYTYPE, ZERO)) ? Proxy.Type.HTTP : Proxy.Type.SOCKS, new InetSocketAddress(preferences.getString(Strings.SETTINGS_PROXYHOST, Strings.EMPTY), Integer.parseInt(preferences.getString(Strings.SETTINGS_PROXYPORT, Strings.DEFAULTPROXYPORT))));
 				
-				System.out.println("Launching wget for page: " + entryCursor.getString(1));
+				//System.out.println("Launching wget for page: " + entryCursor.getString(1));
 				StringBuilder log = new StringBuilder();
 				int i1 = -1, i2 = -1;
 				
 				Process process = null;
 				try {
-					process = new ProcessBuilder().command(args).redirectErrorStream(true).start();
+					ProcessBuilder processBuilder = new ProcessBuilder().directory(new File(FeedDataContentProvider.WEBCACHEFOLDER)).command(args).redirectErrorStream(true);
+					
+					// SOCKS proxy is not supported
+					if (preferences.getBoolean(Strings.SETTINGS_PROXYENABLED, false) && ZERO.equals(preferences.getString(Strings.SETTINGS_PROXYTYPE, ZERO))) {
+						processBuilder.environment().put("http_proxy", "http://" + preferences.getString(Strings.SETTINGS_PROXYHOST, Strings.EMPTY) + ":" + preferences.getString(Strings.SETTINGS_PROXYPORT, Strings.DEFAULTPROXYPORT) + "/");
+						processBuilder.environment().put("https_proxy", "http://" + preferences.getString(Strings.SETTINGS_PROXYHOST, Strings.EMPTY) + ":" + preferences.getString(Strings.SETTINGS_PROXYPORT, Strings.DEFAULTPROXYPORT) + "/");
+					}
+
+					process = processBuilder.start();
 					while (true) {
 						InputStream out = process.getInputStream();
 						byte buf[] = new byte[256];
@@ -121,7 +160,7 @@ public class WgetDownloader {
 							i1 = log.indexOf("\nSaving to: ");
 							i2 = i1 > 0 ? log.indexOf("\n", i1 + 1) : -1;
 						}
-						System.out.println("wget log: " + new String(buf, 0, len));
+						//System.out.println("wget log: " + new String(buf, 0, len));
 						if ( !checkWifi(connectivityManager) ) {
 							entryCursor.close();
 							feedCursor.close();
@@ -142,11 +181,11 @@ public class WgetDownloader {
 				
 				ContentValues values = new ContentValues();
 				if (i1 > 0 && i2 > 0) {
-					values.put(FeedData.EntryColumns.SAVEDPAGE, log.substring(i1 + 1, i2 - 1));
-					System.out.println("wget target file: " + log.substring(i1 + 1, i2 - 1));
+					values.put(FeedData.EntryColumns.SAVEDPAGE, FeedDataContentProvider.WEBCACHEFOLDER + "/" + log.substring(i1 + WGET_TARGET_FILE_LOG.length() + 1, i2 - 1));
+					//System.out.println("wget target file: " + log.substring(i1 + WGET_TARGET_FILE_LOG.length() + 1, i2 - 1));
 				} else {
 					values.put(FeedData.EntryColumns.SAVEDPAGE, "");
-					System.out.println("wget - failed to get target file");
+					//System.out.println("wget - failed to get target file");
 				}
 				context.getContentResolver().update(FeedData.EntryColumns.ENTRY_CONTENT_URI(entryCursor.getString(0)), values, null, null);
 			}
@@ -163,10 +202,10 @@ public class WgetDownloader {
 		return true;
 	}
 
-	private static boolean downloadWget(Context context) {
+	private static boolean downloadWgetBinary(Context context) {
 		
-		if( !Build.CPU_ABI.equals("armeabi") && !Build.CPU_ABI2.equals("armeabi") ) {
-			System.out.println("Cannot download wget - incompatible architecture, only armeabi is supported");
+		if( !architectureSupported() ) {
+			//System.out.println("Cannot download wget - incompatible architecture, only " + WGET_BINARY_ARCH + " is supported");
 			return false;
 		}
 		
@@ -176,7 +215,7 @@ public class WgetDownloader {
 			return true;
 		}
 		context.getFilesDir().mkdirs();
-		System.out.println("Downloading wget from: " + WGET_BINARY_URL + " to: " + wgetPath);
+		//System.out.println("Downloading wget from: " + WGET_BINARY_URL + " to: " + wgetPath);
 		BufferedOutputStream out = null;
 		try {
 			InputStream in = new URL(WGET_BINARY_URL).openStream();
@@ -193,7 +232,7 @@ public class WgetDownloader {
 			out.close();
 			in.close();
 		} catch (Exception e) {
-			System.out.println("Error downloading wget from: " + WGET_BINARY_URL + " to: " + wgetPath + " : " + e);
+			//System.out.println("Error downloading wget from: " + WGET_BINARY_URL + " to: " + wgetPath + " : " + e);
 			if (out != null) {
 				try {
 					out.close();
@@ -211,11 +250,11 @@ public class WgetDownloader {
 			process.getInputStream().close();
 			process.waitFor();
 		} catch (Exception e) {
-			System.out.println("Downloading wget from: " + WGET_BINARY_URL + " to: " + wgetPath + " : error setting permissions");
+			//System.out.println("Downloading wget from: " + WGET_BINARY_URL + " to: " + wgetPath + " : error setting permissions");
 			wgetPath.delete();
 			return false;
 		}
-		System.out.println("Downloading wget from: " + WGET_BINARY_URL + " to: " + wgetPath + " : done");
+		//System.out.println("Downloading wget from: " + WGET_BINARY_URL + " to: " + wgetPath + " : done");
 		return true;
 	}
 }

@@ -26,6 +26,7 @@
 package de.shandschuh.sparserss;
 
 import java.util.Date;
+import java.io.File;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -479,7 +480,7 @@ public class EntryActivity extends Activity {
 				}
 				*/
 				
-				if (savedPage != null && savedPage.length() > 0) {
+				if (savedPage != null && savedPage.length() > 0 && new File(savedPage).exists()) {
 					webView.loadUrl("file://" + savedPage);
 					if (MainTabActivity.isLightTheme(this) || preferences.getBoolean(Strings.SETTINGS_BLACKTEXTONWHITE, false)) {
 						webView.setBackgroundColor(Color.WHITE);
