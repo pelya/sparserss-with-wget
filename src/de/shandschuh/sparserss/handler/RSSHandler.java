@@ -285,6 +285,7 @@ public class RSSHandler extends DefaultHandler {
 		author = null;
 		nameTagEntered = false;
 		iconTagEntered = false;
+		icon = null;
 		entryTagEntered = false;
 		feedLinkUrl = null;
 	}
