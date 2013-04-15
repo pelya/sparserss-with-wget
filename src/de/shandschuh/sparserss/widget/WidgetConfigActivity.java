@@ -26,7 +26,6 @@
 package de.shandschuh.sparserss.widget;
 
 import android.appwidget.AppWidgetManager;
-import android.appwidget.AppWidgetProviderInfo;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -63,8 +62,6 @@ public class WidgetConfigActivity extends PreferenceActivity {
 		addPreferencesFromResource(R.layout.widgetpreferences);
 		setContentView(R.layout.widgetconfig);
 		
-		final boolean isSmallWidget = AppWidgetManager.getInstance(WidgetConfigActivity.this).getAppWidgetInfo(widgetId).initialLayout == R.layout.homescreenwidget_small;
-		
 		final ListPreference entryCountPreference = (ListPreference) findPreference("widget.entrycount");
 		
 		final PreferenceCategory feedsPreferenceCategory = (PreferenceCategory) findPreference("widget.visiblefeeds");
@@ -96,9 +93,11 @@ public class WidgetConfigActivity extends PreferenceActivity {
 				public void onClick(View view) {
 					SharedPreferences.Editor preferences = getSharedPreferences(SparseRSSAppWidgetProvider.class.getName(), 0).edit();
 					
-					boolean hideRead = false;//((CheckBoxPreference) getPreferenceManager().findPreference("widget.hideread")).isChecked();
+					boolean hideRead = ((CheckBoxPreference) getPreferenceManager().findPreference("widget.hideread")).isChecked();
+					boolean countOnly = ((CheckBoxPreference) getPreferenceManager().findPreference("widget.countonly")).isChecked();
 					
 					preferences.putBoolean(widgetId+".hideread", hideRead);
+					preferences.putBoolean(widgetId+".countonly", countOnly);
 					
 					StringBuilder builder = new StringBuilder();
 					
@@ -129,8 +128,8 @@ public class WidgetConfigActivity extends PreferenceActivity {
 					preferences.putInt(widgetId+".background", color);
 					preferences.commit();
 					
-					if ( isSmallWidget ) {
-						SparseRSSAppWidgetProviderSmall.updateAppWidget(WidgetConfigActivity.this, AppWidgetManager.getInstance(WidgetConfigActivity.this), widgetId, feedIds);
+					if (countOnly) {
+						SparseRSSAppWidgetProvider.updateAppWidget_CountOnly(WidgetConfigActivity.this, AppWidgetManager.getInstance(WidgetConfigActivity.this), widgetId, feedIds);
 					} else {
 						SparseRSSAppWidgetProvider.updateAppWidget(WidgetConfigActivity.this, AppWidgetManager.getInstance(WidgetConfigActivity.this), widgetId, hideRead, entryCount, feedIds, color);
 					}

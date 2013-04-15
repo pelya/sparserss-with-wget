@@ -130,6 +130,8 @@
 
     <string name="settings_hideread">Hide read entries</string>
     <string name="settings_hideread_description">Hide entries from the widget if they have been read</string>
+    <string name="settings_onlyentrycount">Compact widget</string>
+    <string name="settings_onlyentrycount_description">Only show number of unread entries</string>
     <string name="settings_entrysettings">Entry settings</string>
     <string name="settings_visiblefeeds">Visible feeds</string>
     <string name="settings_widgetentrycount">Entry count</string>

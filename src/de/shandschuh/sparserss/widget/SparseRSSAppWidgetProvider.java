@@ -28,6 +28,7 @@ package de.shandschuh.sparserss.widget;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.appwidget.AppWidgetProviderInfo;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -63,7 +64,11 @@ public class SparseRSSAppWidgetProvider extends AppWidgetProvider {
 		SharedPreferences preferences = context.getSharedPreferences(SparseRSSAppWidgetProvider.class.getName(), 0);
 		
 		for (int n = 0, i = appWidgetIds.length; n < i; n++) {
-			updateAppWidget(context, appWidgetManager, appWidgetIds[n], preferences.getBoolean(appWidgetIds[n]+".hideread", false), preferences.getString(appWidgetIds[n]+".entrycount", "10"), preferences.getString(appWidgetIds[n]+".feeds", Strings.EMPTY), preferences.getInt(appWidgetIds[n]+".background", STANDARD_BACKGROUND));
+			if (preferences.getBoolean(appWidgetIds[n]+".countonly", false)) {
+				updateAppWidget_CountOnly(context, appWidgetManager, appWidgetIds[n], preferences.getString(appWidgetIds[n]+".feeds", Strings.EMPTY));
+			} else {
+				updateAppWidget(context, appWidgetManager, appWidgetIds[n], preferences.getBoolean(appWidgetIds[n]+".hideread", false), preferences.getString(appWidgetIds[n]+".entrycount", "10"), preferences.getString(appWidgetIds[n]+".feeds", Strings.EMPTY), preferences.getInt(appWidgetIds[n]+".background", STANDARD_BACKGROUND));
+			}
 		}
 	}
 	
@@ -130,4 +135,29 @@ public class SparseRSSAppWidgetProvider extends AppWidgetProvider {
 		appWidgetManager.updateAppWidget(appWidgetId, views);
 	}
 
+	static void updateAppWidget_CountOnly(Context context, AppWidgetManager appWidgetManager, int appWidgetId, String feedIds) {
+		StringBuilder selection = new StringBuilder();
+		
+		selection.append(FeedData.EntryColumns.READDATE).append(Strings.DB_ISNULL);
+		
+		if (feedIds.length() > 0) {
+			if (selection.length() > 0) {
+				selection.append(Strings.DB_AND);
+			}
+			selection.append(FeedData.EntryColumns.FEED_ID).append(" IN ("+feedIds).append(')');
+		}
+		
+		Cursor cursor = context.getContentResolver().query(FeedData.EntryColumns.CONTENT_URI, new String[] {FeedData.EntryColumns._ID}, selection.toString(), null, null);
+		
+		int k = 0;
+		while (cursor.moveToNext()) {
+			k++;
+		}
+		cursor.close();
+		
+		RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.homescreenwidget_small);
+		views.setOnClickPendingIntent(R.id.news_counter_layout, PendingIntent.getActivity(context, 0, new Intent(context, MainTabActivity.class), 0));
+		views.setTextViewText(R.id.news_counter, String.valueOf(k));
+		appWidgetManager.updateAppWidget(appWidgetId, views);
+	}
 }

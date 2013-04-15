@@ -1,9 +1,0 @@
-<appwidget-provider
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="56dp"
-    android:minHeight="56dp"
-    android:updatePeriodMillis="0"
-    android:initialLayout="@layout/homescreenwidget_small"
-    android:minResizeHeight="70dp"
-    android:resizeMode="none"
-    android:configure="de.shandschuh.sparserss.widget.WidgetConfigActivity"/>

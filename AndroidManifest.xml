@@ -85,14 +85,6 @@
             <meta-data android:name="android.appwidget.provider"
                        android:resource="@xml/widgetinfo" />
         </receiver>
-        <receiver android:name=".widget.SparseRSSAppWidgetProviderSmall" android:label="@string/widget_small_name" >
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="de.shandschuh.sparserss.FEEDUPDATED" />
-            </intent-filter>
-            <meta-data android:name="android.appwidget.provider"
-                       android:resource="@xml/widgetinfo_small" />
-        </receiver>
         <receiver android:name=".RefreshBroadcastReceiver" >
             <intent-filter>
                 <action android:name="de.shandschuh.sparserss.REFRESH" />

@@ -45,6 +45,7 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.text.ClipboardManager;
 import android.text.TextUtils;
@@ -585,13 +586,6 @@ public class EntryActivity extends Activity {
 			entryCursor.close();
 		}
 		((TextView)findViewById(R.id.title)).setMaxLines(4);
-		/*
-		new Thread() {
-			public void run() {
-				sendBroadcast(new Intent(Strings.ACTION_UPDATEWIDGET)); // this is slow
-			}
-		}.start();
-		*/
 	}
 	
 	private void showEnclosure(Uri uri, String enclosure, int position1, int position2) {
@@ -688,6 +682,25 @@ public class EntryActivity extends Activity {
 		}
 		scrollX = webView.getScrollX();
 		scrollY = webView.getScrollY();
+		// We have read some entries - send broadcast to update our widgets, but do it with a delay, to keep animation fluent
+		// Creating a thread is inefficient, re-using activity thread via Handler is better
+		/*
+		new Thread() {
+			public void run() {
+				try {
+					Thread.sleep(2000);
+				} catch (Exception e) {
+				}
+				sendBroadcast(new Intent(Strings.ACTION_UPDATEWIDGET)); // this is slow
+			}
+		}.start();
+		*/
+		Handler handler = new Handler();
+		handler.postDelayed(new Runnable() {
+			public void run() {
+				sendBroadcast(new Intent(Strings.ACTION_UPDATEWIDGET));
+			}
+		}, 2000);
 	}
 	
 	@Override
@@ -764,7 +777,7 @@ public class EntryActivity extends Activity {
 			webView.pageDown(false);
 		}
 	}
-
+	
 	/**
 	 * Works around android issue 6191
 	 */
