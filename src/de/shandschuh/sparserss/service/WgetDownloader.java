@@ -261,8 +261,8 @@ public class WgetDownloader {
 	}
 	
 	private static void deleteWebCacheIfNeeded(SharedPreferences preferences) {
-		long keepTime = Long.parseLong(preferences.getString(Strings.SETTINGS_KEEPTIME, "4"))*86400l;
-		if (new File(FeedDataContentProvider.WEBCACHEFOLDER).lastModified() > System.currentTimeMillis() / 1000 + keepTime) {
+		long keepTime = Long.parseLong(preferences.getString(Strings.SETTINGS_KEEPTIME, "4"))*86400000l;
+		if (new File(FeedDataContentProvider.WEBCACHEFOLDER).lastModified() + keepTime < System.currentTimeMillis() / 1000) {
 			deleteRecursively(new File(FeedDataContentProvider.WEBCACHEFOLDER));
 		}
 	}
