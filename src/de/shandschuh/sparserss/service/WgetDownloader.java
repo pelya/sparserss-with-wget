@@ -105,7 +105,12 @@ public class WgetDownloader {
 			return;
 		}
 		
-		deleteWebCacheIfNeeded(preferences);
+		if (deleteWebCacheIfNeeded(preferences)) {
+			// Clean "saved page" field for all entries, so all unread entries will be re-downloaded
+			ContentValues values = new ContentValues();
+			values.putNull(FeedData.EntryColumns.SAVEDPAGE);
+			context.getContentResolver().update(FeedData.EntryColumns.CONTENT_URI, values, null, null);
+		}
 		
 		new File(FeedDataContentProvider.WEBCACHEFOLDER).mkdirs();
 		
@@ -260,11 +265,13 @@ public class WgetDownloader {
 		return true;
 	}
 	
-	private static void deleteWebCacheIfNeeded(SharedPreferences preferences) {
+	private static boolean deleteWebCacheIfNeeded(SharedPreferences preferences) {
 		long keepTime = Long.parseLong(preferences.getString(Strings.SETTINGS_KEEPTIME, "4"))*86400000l;
 		if (new File(FeedDataContentProvider.WEBCACHEFOLDER).lastModified() + keepTime < System.currentTimeMillis() / 1000) {
 			deleteRecursively(new File(FeedDataContentProvider.WEBCACHEFOLDER));
+			return true;
 		}
+		return false;
 	}
 	
 	public static boolean deleteRecursively(File dir)
