@@ -159,7 +159,7 @@ public class EntryActivity extends Activity {
 	
 	private WebView webView;
 	
-	private WebView webView0; // only needed for the animation
+	private TextView animationView; // only needed for the animation
 	
 	private ViewFlipper viewFlipper;
 	
@@ -235,8 +235,11 @@ public class EntryActivity extends Activity {
 		layoutParams = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
 		
 		webView = new WebView(this);
+		animationView = new TextView(this);
 		
+		viewFlipper.addView(animationView, layoutParams);
 		viewFlipper.addView(webView, layoutParams);
+		viewFlipper.setDisplayedChild(1);
 		
 		OnKeyListener onKeyEventListener = new OnKeyListener() {
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -256,8 +259,7 @@ public class EntryActivity extends Activity {
 		
 		content = findViewById(R.id.entry_content);
 		
-		webView0 = new WebView(this);
-		webView0.setOnKeyListener(onKeyEventListener);
+		animationView.setOnKeyListener(onKeyEventListener);
 		
 		preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
@@ -328,7 +330,7 @@ public class EntryActivity extends Activity {
 			}
 		});
 		
-		webView0.setOnTouchListener(onTouchListener);
+		animationView.setOnTouchListener(onTouchListener);
 		
 		scrollX = 0;
 		scrollY = 0;
@@ -389,6 +391,7 @@ public class EntryActivity extends Activity {
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(link)));
 			} else {
 				((TextView)findViewById(R.id.title)).setText(entryCursor.getString(titlePosition));
+				animationView.setText(entryCursor.getString(titlePosition)); // Fill animation view with some text, so it won't look like filler
 				
 				int _feedId = entryCursor.getInt(feedIdPosition);
 				
@@ -643,15 +646,6 @@ public class EntryActivity extends Activity {
 		scrollY = 0;
 		
 		if (animate) {
-			WebView dummy = webView; // switch reference
-			
-			webView = webView0;
-			webView0 = dummy;
-		}
-		
-		reload();
-		
-		if (animate) {
 			webView.clearView();
 			if (MainTabActivity.isLightTheme(this) || preferences.getBoolean(Strings.SETTINGS_BLACKTEXTONWHITE, false)) {
 				webView.setBackgroundColor(Color.WHITE);
@@ -660,10 +654,17 @@ public class EntryActivity extends Activity {
 			}
 			viewFlipper.setInAnimation(inAnimation);
 			viewFlipper.setOutAnimation(outAnimation);
-			viewFlipper.addView(webView, layoutParams);
+			viewFlipper.setDisplayedChild(0);
+			//viewFlipper.removeAllViews();
+			//viewFlipper.addView(animationView, layoutParams);
+			//viewFlipper.addView(webView, layoutParams);
 			viewFlipper.showNext();
-			viewFlipper.removeViewAt(0);
 		}
+		reload();
+		try {
+			if( Integer.parseInt(android.os.Build.VERSION.SDK) >= android.os.Build.VERSION_CODES.ECLAIR_MR1 )
+				webView.freeMemory();
+		} catch ( NumberFormatException nf ) {}
 	}
 	
 	private void nextEntry(boolean animate) {
